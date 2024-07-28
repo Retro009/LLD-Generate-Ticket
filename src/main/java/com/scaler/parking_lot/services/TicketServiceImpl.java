@@ -29,10 +29,10 @@ public class TicketServiceImpl implements TicketService{
     }
     @Override
     public Ticket generateTicket(int gateId, String registrationNumber, String vehicleType) throws InvalidGateException, InvalidParkingLotException, ParkingSpotNotAvailableException {
-        Optional<Gate> optionalGate = gateRepository.findById(gateId);
-        if(optionalGate.isEmpty() || optionalGate.get().getType().equals(GateType.EXIT))
-            throw new InvalidGateException("Invalid Gate");
-        Gate gate = optionalGate.get();
+        Gate gate = gateRepository.findById(gateId).orElseThrow(() -> new InvalidGateException("Gate Doesnt Exist"));
+        if(gate.getType().equals(GateType.EXIT))
+            throw new InvalidGateException("Invalid Gate Type");
+
         Optional<Vehicle> optionalVehicle = vehicleRepository.getVehicleByRegistrationNumber(registrationNumber);
         Vehicle vehicle;
         if(optionalVehicle.isEmpty()){
@@ -42,16 +42,18 @@ public class TicketServiceImpl implements TicketService{
             vehicleRepository.save(vehicle);
         }else
             vehicle = optionalVehicle.get();
-        ParkingLot parkingLot = parkingLotRepository.getParkingLotByGateId(gateId).orElseThrow(() -> new InvalidParkingLotException("Invalid Gate"));
+        ParkingLot parkingLot = parkingLotRepository.getParkingLotByGateId(gateId).orElseThrow(() -> new InvalidParkingLotException("No ParkingLot Available with this gate"));
 
-        ParkingSpot parkingSpot = spotAssignmentStrategy.assignSpot(parkingLot, VehicleType.valueOf(vehicleType)).orElseThrow(()-> new ParkingSpotNotAvailableException("Parking Spot Not Available!"));
+        ParkingSpot spot = spotAssignmentStrategy.assignSpot(parkingLot, VehicleType.valueOf(vehicleType)).orElseThrow(()-> new ParkingSpotNotAvailableException("Parking Spot Not Available!"));
+        spot.setStatus(ParkingSpotStatus.OCCUPIED);
 
         Ticket ticket = new Ticket();
         ticket.setGate(gate);
         ticket.setVehicle(vehicle);
         ticket.setEntryTime(new Date());
-        ticket.setParkingSpot(parkingSpot);
+        ticket.setParkingSpot(spot);
         ticket.setParkingAttendant(gate.getParkingAttendant());
+        ticketRepository.save(ticket);
         return ticket;
     }
 }

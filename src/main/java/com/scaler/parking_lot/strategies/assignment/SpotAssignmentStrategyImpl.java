@@ -12,7 +12,7 @@ public class SpotAssignmentStrategyImpl implements SpotAssignmentStrategy{
     @Override
     public Optional<ParkingSpot> assignSpot(ParkingLot parkingLot, VehicleType vehicleType) {
         List<ParkingFloor> parkingFloors = parkingLot.getParkingFloors().stream().filter(floor -> floor.getStatus().equals(FloorStatus.OPERATIONAL)).collect(Collectors.toList());
-        List<ParkingFloor> eligibleParkingFloors = parkingFloors.stream().filter(floor -> floor.getSpots().stream().filter(spot -> spot.getStatus().equals(ParkingSpotStatus.AVAILABLE) && spot.getSupportedVehicleType().equals(vehicleType)).findAny().isPresent()).collect(Collectors.toList());
+        List<ParkingFloor> eligibleParkingFloors = parkingFloors.stream().filter(floor -> floor.getSpots().stream().anyMatch(spot -> spot.getStatus().equals(ParkingSpotStatus.AVAILABLE) && spot.getSupportedVehicleType().equals(vehicleType))).collect(Collectors.toList());
         if(eligibleParkingFloors.size()==0)
             return Optional.empty();
 
