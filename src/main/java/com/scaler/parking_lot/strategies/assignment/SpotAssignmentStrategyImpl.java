@@ -23,7 +23,7 @@ public class SpotAssignmentStrategyImpl implements SpotAssignmentStrategy{
             return result;
         });
 
-        List<ParkingSpot> spots = eligibleParkingFloors.getFirst().getSpots();
+        List<ParkingSpot> spots = eligibleParkingFloors.get(0).getSpots();
 
         spots.sort(Comparator.comparingInt(ParkingSpot::getNumber));
 
